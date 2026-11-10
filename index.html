@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>策略鑑識室</title>
+<style>
+:root{--ink:#e6eeff;--dim:#8a97b4;--blue:#6cc4ff;--gold:#ffc870;--red:#ff4b5c}
+html,body{margin:0;height:100%;background:#03050b;overflow:hidden;color:var(--ink);font-family:"PingFang TC","Heiti TC","Noto Sans TC",sans-serif}
+#stage{position:fixed;inset:0;overflow:hidden;background:#03050b}
+#stage canvas{position:absolute;inset:0;display:block}
+.labels{position:absolute;inset:0;pointer-events:none}
+.rec #stage{width:1920px;height:1080px}
+
+/* 3D 標籤 */
+.lab{font-size:clamp(11px,.92vw,18px);font-weight:600;letter-spacing:.08em;white-space:nowrap;color:#dce8ff;text-shadow:0 0 12px rgba(80,160,255,.6),0 1px 2px #000;pointer-events:none}
+.lab.big{font-size:clamp(15px,1.5vw,30px);font-weight:800;letter-spacing:.12em}
+.lab.red{color:#ff7884;text-shadow:0 0 14px rgba(255,40,70,.7),0 1px 2px #000}
+.lab.gold{color:#ffd895;text-shadow:0 0 14px rgba(255,170,60,.7),0 1px 2px #000}
+.lab.sm{font-size:clamp(9px,.68vw,13px);font-weight:500;color:#9fb1d6;letter-spacing:.14em}
+.lab.tag{padding:.25em .7em;border:1px solid rgba(140,190,255,.45);background:rgba(8,16,34,.6);border-radius:3px}
+.lab.tag.red{border-color:rgba(255,90,110,.6);background:rgba(40,6,12,.6)}
+.lab.tag.gold{border-color:rgba(255,200,110,.6);background:rgba(40,26,6,.55)}
+.card{width:clamp(170px,15vw,300px);padding:.9em 1.1em;font-size:clamp(10px,.82vw,16px);line-height:1.65;color:#d6e2fa;background:linear-gradient(135deg,rgba(14,26,52,.82),rgba(6,10,22,.7));border:1px solid rgba(120,170,255,.25);border-left:3px solid var(--c,#6cc4ff);border-radius:4px;backdrop-filter:blur(6px);box-shadow:0 10px 40px rgba(0,0,0,.5);pointer-events:none}
+.card h4{margin:0 0 .35em;font-size:1.25em;letter-spacing:.12em;color:var(--c,#6cc4ff)}
+.card h4 small{font-size:.62em;color:#7d8bab;letter-spacing:.2em;margin-left:.6em;font-weight:500}
+.card p{margin:0}
+
+/* HUD */
+#hud{position:absolute;left:3.2vw;top:3.4vh;pointer-events:none}
+#hud .brand{font-size:clamp(14px,1.25vw,24px);font-weight:800;letter-spacing:.32em}
+#hud .brand span{font-size:.5em;font-weight:500;color:var(--dim);letter-spacing:.3em;margin-left:1em}
+#hud .step{margin-top:.8vh;font-size:clamp(11px,.85vw,16px);color:#9fb1d6;letter-spacing:.2em;font-variant-numeric:tabular-nums}
+#hud .step b{color:var(--blue);font-size:1.5em;margin:0 .15em}
+#hud .step em{font-style:normal;color:var(--ink);margin-left:.8em;font-weight:700;letter-spacing:.25em}
+#hud .bar{margin-top:1vh;width:clamp(140px,13vw,260px);height:2px;background:rgba(140,170,230,.18);position:relative}
+#hud .bar u{position:absolute;left:0;top:0;bottom:0;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+#tc{position:absolute;right:3.2vw;top:3.6vh;font-size:clamp(10px,.75vw,14px);letter-spacing:.25em;color:#6f7f9f;font-variant-numeric:tabular-nums;pointer-events:none;text-align:right}
+#tc i{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--red);margin-right:.6em;box-shadow:0 0 8px var(--red)}
+
+#cap{position:absolute;left:0;right:0;bottom:14vh;text-align:center;font-size:clamp(20px,2.55vw,50px);font-weight:800;letter-spacing:.14em;pointer-events:none;text-shadow:0 0 28px rgba(0,0,0,.9),0 2px 4px #000}
+#cap span{display:inline-block;will-change:transform,opacity,filter}
+#cap.red{color:#ff8e98}
+#cap.gold{color:#ffdca0}
+.rec #cap{bottom:9vh}
+
+#endcard{position:absolute;left:0;right:0;top:36%;text-align:center;pointer-events:none;opacity:0}
+#endcard h1{margin:0;font-size:clamp(34px,4.6vw,92px);font-weight:900;letter-spacing:.45em;text-indent:.45em;text-shadow:0 0 40px rgba(110,190,255,.55)}
+#endcard div{margin-top:1.6vh;font-size:clamp(12px,1.05vw,20px);color:#a8b6d4;letter-spacing:.3em}
+#credit{position:absolute;left:0;right:0;bottom:3vh;text-align:center;font-size:clamp(9px,.66vw,13px);color:#66738f;letter-spacing:.12em;pointer-events:none;opacity:0}
+#fade{position:absolute;inset:0;background:#000;pointer-events:none;opacity:0}
+
+/* 互動控制 */
+#ctrl{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,14,30,.72);border:1px solid rgba(120,170,255,.22);border-radius:40px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#ctrl button{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid rgba(140,180,255,.25);border-radius:20px;padding:7px 13px;cursor:pointer;letter-spacing:.08em;white-space:nowrap}
+#ctrl button:hover{border-color:var(--blue);color:#fff}
+#ctrl #play{background:linear-gradient(135deg,#1f6fe0,#1149a8);border-color:transparent;font-weight:700;min-width:7.5em}
+#steps{display:flex;gap:6px}
+#steps button{padding:6px 10px}
+#steps button.on{background:rgba(108,196,255,.18);border-color:var(--blue);color:#fff}
+#scrub{width:clamp(80px,12vw,220px);accent-color:#6cc4ff}
+#hint{position:absolute;right:3.2vw;bottom:3.6vh;font-size:12px;color:#6f7f9f;letter-spacing:.12em;pointer-events:none;text-align:right;line-height:1.8}
+#director{position:absolute;right:3.2vw;top:9vh;font:inherit;font-size:13px;color:var(--ink);background:rgba(8,14,30,.72);border:1px solid rgba(108,196,255,.5);border-radius:20px;padding:8px 14px;cursor:pointer;display:none;letter-spacing:.1em}
+#intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(3,5,11,.35),rgba(3,5,11,.85));transition:opacity .8s}
+#intro h1{margin:0;font-size:clamp(34px,5vw,84px);font-weight:900;letter-spacing:.45em;text-indent:.45em;text-shadow:0 0 40px rgba(110,190,255,.55)}
+#intro p{color:#9fb1d6;letter-spacing:.3em;margin:1.4em 0 2.4em;font-size:clamp(12px,1vw,18px)}
+#intro button{font:inherit;font-size:18px;font-weight:800;letter-spacing:.3em;color:#fff;background:linear-gradient(135deg,#1f6fe0,#1149a8);border:0;border-radius:40px;padding:16px 40px;cursor:pointer;box-shadow:0 0 40px rgba(31,111,224,.6)}
+#intro a{margin-top:1.4em;color:#7d8bab;font-size:13px;letter-spacing:.2em;cursor:pointer;text-decoration:underline}
+.rec #ctrl,.rec #hint,.rec #director,.rec #intro{display:none!important}
+@media (max-width:1180px){#hint{display:none}}
+@media (max-width:760px){#steps button span{display:none}#scrub{display:none}#ctrl{gap:6px;padding:8px}}
+</style></head>
+<body>
+<div id="stage"></div>
+<div id="hud"><div class="brand">策略鑑識室<span>STRATEGY FORENSICS</span></div>
+  <div class="step">STEP<b id="stepNo">01</b>/ 06<em id="stepName">全圖導覽</em></div><div class="bar"><u id="bar"></u></div></div>
+<div id="tc"><i></i><span id="tcv">CASE 0417 · T+00:00.0</span></div>
+<div id="cap"></div>
+<div id="endcard"><h1>策略鑑識室</h1><div>現況 → 問題 → 目標 → 假設 → 測試迭代</div></div>
+<div id="credit">Music: “Volatile Reaction” Kevin MacLeod (incompetech.com) · CC BY 4.0　／　改編自〈策略思考〉教學圖解 · 練習作品</div>
+<div id="fade"></div>
+<button id="director">🎥 回到導演視角</button>
+<div id="ctrl">
+  <button id="prev">← 上一步</button>
+  <button id="play">▶ 開始推理</button>
+  <button id="next">下一步 →</button>
+  <div id="steps"></div>
+  <input id="scrub" type="range" min="0" max="72" step="0.05" value="66">
+  <button id="snd">🔊</button>
+</div>
+<div id="hint">拖曳旋轉 · 滾輪縮放 · 右鍵平移<br>點節點跳到該步 · 點地面起漣漪 · 雙擊發射推理脈衝</div>
+<div id="intro"><h1>策略鑑識室</h1><p>把一張策略思考圖，變成可以走進去的推理現場</p><button id="go">▶ 開始推理</button><a id="explore">先自己逛逛</a></div>
+<script>if(/[?&]rec=1/.test(location.search))document.documentElement.classList.add('rec')</script>
+<script src="audio_env.js"></script>
+<script src="app.js"></script>
+</body></html>

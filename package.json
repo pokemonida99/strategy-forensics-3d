@@ -1,0 +1,17 @@
+{
+  "name": "strategy-forensics-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "策略鑑識室：把〈策略思考〉圖解改編成 Three.js 3D 互動推理現場",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=iife --target=es2020 --outfile=app.js",
+    "audio": "node tools/audio_env.mjs",
+    "stills": "node tools/record.mjs stills 9,21,30.5,45,58,64.6 stills",
+    "video": "node tools/record.mjs video silent.mp4 30"
+  },
+  "devDependencies": {
+    "esbuild": "0.20.2",
+    "puppeteer-core": "^22.0.0",
+    "three": "0.160.0"
+  }
+}
