@@ -23837,8 +23837,25 @@ float fbm(vec3 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*snoise(p);p*=2.03;a*
   controls.maxDistance = 90;
   controls.maxPolarAngle = Math.PI * 0.495;
   controls.target.set(1.5, 7.8, 0);
-  var audio = new Audio("music/volatile_reaction.mp3");
+  var audio = new Audio("music/soundtrack.mp3");
   audio.preload = "auto";
+  var SFX = {};
+  for (const n of ["chime", "energy_pulse", "lock_on"]) {
+    SFX[n] = new Audio(`music/sfx/${n}.mp3`);
+    SFX[n].preload = "auto";
+  }
+  function sfx(n, vol = 0.5, rate = 1, delay = 0) {
+    if (!S.sound || REC)
+      return;
+    setTimeout(() => {
+      const a = SFX[n].cloneNode();
+      a.volume = vol;
+      a.preservesPitch = false;
+      a.playbackRate = rate;
+      a.play().catch(() => {
+      });
+    }, delay * 1e3);
+  }
   var envAt = (t) => {
     const E = window.AUDIO_ENV;
     if (!E)
@@ -23918,7 +23935,6 @@ float fbm(vec3 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*snoise(p);p*=2.03;a*
             }
           }
         }
-        audio.volume = 1 - seg(S.T, 68.5, 72);
         if (S.T >= DUR) {
           pause();
           S.T = 66;
@@ -24029,6 +24045,7 @@ float fbm(vec3 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*snoise(p);p*=2.03;a*
       if (hit) {
         if (!S.started)
           hideIntro();
+        sfx("lock_on", 0.45);
         jump(hit.object.userData.t);
         return;
       }
@@ -24037,10 +24054,15 @@ float fbm(vec3 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*snoise(p);p*=2.03;a*
         S.ripX = p.x;
         S.ripZ = p.z;
         S.rip = S.A;
+        sfx("chime", 0.22, 0.7 + Math.random() * 0.5);
       }
     });
     el.addEventListener("dblclick", () => {
       S.xp = S.A;
+      sfx("energy_pulse", 0.5, 1);
+      sfx("energy_pulse", 0.4, 1.2, 0.7);
+      sfx("energy_pulse", 0.4, 1.35, 1.4);
+      sfx("chime", 0.4, 1.26, 2.1);
     });
     addEventListener("resize", () => {
       W = innerWidth;

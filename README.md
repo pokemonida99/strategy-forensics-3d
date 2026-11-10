@@ -30,14 +30,17 @@
 - 後製：UnrealBloom 泛光、色差、底片顆粒、暗角
 - 所有畫面只由「故事時間」決定，同一條時間軸可以即時互動，也可以逐格錄成影片（`tools/record.mjs`）
 - 配樂的音量與節拍事先算好（`tools/audio_env.mjs`），畫面跟著節拍脈動
+- 15 個 ElevenLabs 音效（`sfx/`）依畫面時間點混進配樂（`tools/mix_sfx.py` → `music/soundtrack.mp3`），大音效出現時配樂自動閃避；點節點、點地面、雙擊發射脈衝也有即時音效
 - 依幀率自動調整渲染解析度
 
 ```bash
 npm install
 npm run build   # src/main.js → app.js
+npm run mix     # 重新混音（需要 Python 3 + numpy、ffmpeg）
 ```
 
 ## 授權與來源
 
 - 配樂：“Volatile Reaction” Kevin MacLeod (incompetech.com)，Licensed under Creative Commons: By Attribution 4.0
+- 音效：ElevenLabs Sound Effects 生成，非商業練習用途
 - 內容改編自〈策略思考〉教學圖解影片，練習作品

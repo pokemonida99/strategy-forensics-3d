@@ -2,3 +2,4 @@ node_modules/
 *.mp4
 stills/
 .DS_Store
+*.wav

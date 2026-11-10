@@ -809,7 +809,13 @@ function draw() { composer.render(); labelR.render(scene, camera); }
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .07; controls.minDistance = 3; controls.maxDistance = 90;
 controls.maxPolarAngle = Math.PI * .495; controls.target.set(1.5, 7.8, 0);
-const audio = new Audio('music/volatile_reaction.mp3'); audio.preload = 'auto';
+const audio = new Audio('music/soundtrack.mp3'); audio.preload = 'auto';   // 配樂＋ElevenLabs 音效已混好
+// 互動音效：每次播放複製一個 <audio>，file:// 也能用
+const SFX = {}; for (const n of ['chime', 'energy_pulse', 'lock_on']) { SFX[n] = new Audio(`music/sfx/${n}.mp3`); SFX[n].preload = 'auto'; }
+function sfx(n, vol = .5, rate = 1, delay = 0) {
+  if (!S.sound || REC) return;
+  setTimeout(() => { const a = SFX[n].cloneNode(); a.volume = vol; a.preservesPitch = false; a.playbackRate = rate; a.play().catch(() => { }); }, delay * 1000);
+}
 const envAt = t => { const E = window.AUDIO_ENV; if (!E) return [0, 0]; const i = Math.floor(t * E.fps); return [E.rms[i] || 0, E.on[i] || 0]; };
 
 if (REC) {
@@ -854,10 +860,10 @@ if (REC) {
     if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
     ndc.set(e.clientX / W * 2 - 1, -(e.clientY / H) * 2 + 1); ray.setFromCamera(ndc, camera);
     const hit = ray.intersectObjects(HITS)[0];
-    if (hit) { if (!S.started) hideIntro(); jump(hit.object.userData.t); return; }
-    const p = V(); if (ray.ray.intersectPlane(yPlane, p)) { S.ripX = p.x; S.ripZ = p.z; S.rip = S.A; }
+    if (hit) { if (!S.started) hideIntro(); sfx('lock_on', .45); jump(hit.object.userData.t); return; }
+    const p = V(); if (ray.ray.intersectPlane(yPlane, p)) { S.ripX = p.x; S.ripZ = p.z; S.rip = S.A; sfx('chime', .22, .7 + Math.random() * .5); }
   });
-  el.addEventListener('dblclick', () => { S.xp = S.A; });
+  el.addEventListener('dblclick', () => { S.xp = S.A; sfx('energy_pulse', .5, 1); sfx('energy_pulse', .4, 1.2, .7); sfx('energy_pulse', .4, 1.35, 1.4); sfx('chime', .4, 1.26, 2.1); });
 
   addEventListener('resize', () => {
     W = innerWidth; H = innerHeight; camera.aspect = W / H; camera.updateProjectionMatrix();
@@ -882,7 +888,6 @@ if (REC) {
         if (Math.abs(d) < .3) S.T += d * .1;
         else if (now - (S.seekAt || 0) > 1500) { S.seekAt = now; try { audio.currentTime = S.T; } catch (e) { } }
       }
-      audio.volume = 1 - seg(S.T, 68.5, 72);
       if (S.T >= DUR) { pause(); S.T = 66; }
     }
     playBtn.textContent = S.playing ? '❚❚ 暫停' : (S.T > 0 && S.T < 66 ? '▶ 繼續推理' : '▶ 開始推理');

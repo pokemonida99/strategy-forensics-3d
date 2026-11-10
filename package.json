@@ -6,6 +6,7 @@
   "scripts": {
     "build": "esbuild src/main.js --bundle --format=iife --target=es2020 --outfile=app.js",
     "audio": "node tools/audio_env.mjs",
+    "mix": "python3 tools/mix_sfx.py",
     "stills": "node tools/record.mjs stills 9,21,30.5,45,58,64.6 stills",
     "video": "node tools/record.mjs video silent.mp4 30"
   },
